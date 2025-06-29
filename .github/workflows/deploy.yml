@@ -1,0 +1,149 @@
+name: Deploy Infrastructure and Application
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  TF_VERSION: '1.5.0'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    environment: dev
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan
+      id: tf-plan
+      run: |
+        export exitcode=0
+        terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+        
+        echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        
+        if [ $exitcode -eq 1 ]; then
+          echo Terraform Plan Failed!
+          exit 1
+        elif [ $exitcode -eq 0 ]; then
+          echo No changes. Infrastructure matches the configuration.
+        elif [ $exitcode -eq 2 ]; then
+          echo Changes detected! Proceeding with apply.
+        fi
+
+    - name: Publish Terraform Plan
+      uses: actions/upload-artifact@v3
+      with:
+        name: tfplan
+        path: tfplan
+
+  terraform-apply:
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [terraform-plan]
+    if: needs.terraform-plan.outputs.tfplanExitCode == 2
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Download Terraform Plan
+      uses: actions/download-artifact@v3
+      with:
+        name: tfplan
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve tfplan
+
+    - name: Get Deployment Outputs
+      id: tf-outputs
+      run: |
+        echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+        echo "web_app_name=$(terraform output -raw web_app_name)" >> $GITHUB_OUTPUT
+        echo "app_gateway_public_ip=$(terraform output -raw app_gateway_public_ip)" >> $GITHUB_OUTPUT
+
+  validate-deployment:
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [terraform-apply]
+    if: needs.terraform-plan.outputs.tfplanExitCode == 2
+    
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Validate Infrastructure
+      run: |
+        echo "🔍 Validating deployed resources..."
+        
+        # Get resource group from terraform outputs (you may need to adjust this)
+        RG_NAME="${{ needs.terraform-apply.outputs.resource_group_name || 'myapp-dev-rg' }}"
+        
+        # Check if resources exist
+        echo "Checking Resource Group: $RG_NAME"
+        az group show --name $RG_NAME --query "name" -o tsv
+        
+        echo "Checking Web App..."
+        az webapp list --resource-group $RG_NAME --query "[].name" -o tsv
+        
+        echo "Checking SQL Server..."
+        az sql server list --resource-group $RG_NAME --query "[].name" -o tsv
+        
+        echo "Checking Storage Account..."
+        az storage account list --resource-group $RG_NAME --query "[].name" -o tsv
+        
+        echo "Checking Application Gateway..."
+        az network application-gateway list --resource-group $RG_NAME --query "[].name" -o tsv
+        
+        echo "✅ Infrastructure validation completed successfully!"

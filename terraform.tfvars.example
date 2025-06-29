@@ -1,0 +1,29 @@
+# Terraform Example Variables
+# Copy this file to terraform.tfvars and customize for your environment
+
+# Azure Configuration
+subscription_id      = "your-azure-subscription-id-here"
+location            = "East US"
+
+# Resource Naming
+resource_group_name    = "myapp-dev-rg"
+app_service_name       = "myapp-dev-web"
+app_service_plan_name  = "myapp-dev-plan"
+app_service_sku        = "S1"  # Must be S1 or higher for VNet integration
+sql_server_name        = "myapp-dev-sql"
+database_name          = "myapp-db"
+storage_account_name   = "myappdevstorage"  # Must be globally unique
+app_gateway_name       = "myapp-dev-appgw"
+key_vault_name         = "myapp-dev-kv"
+
+# SQL Database Configuration
+sql_admin_username = "sqladmin"
+sql_admin_password = "YourSecurePassword123!"  # Use a strong password
+
+# Tagging
+tags = {
+  Environment = "Development"
+  Project     = "WebApp-IaC"
+  Owner       = "DevOps-Team"
+  CostCenter  = "Engineering"
+}
