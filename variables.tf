@@ -2,7 +2,7 @@
 variable "subscription_id" {
   description = "Azure subscription ID to deploy resources to"
   type        = string
-  default     = "34c068fd-ceb1-4bb7-96c6-00360b36cbcb" # Your Pay-As-You-Go subscription
+  # No default - must be provided via environment-specific tfvars or workspace configuration
 }
 
 variable "resource_group_name" {
@@ -103,4 +103,64 @@ variable "key_vault_name" {
   description = "Name of the Key Vault"
   type        = string
   default     = "kv-webapp-demo"
+}
+
+variable "key_vault_base_name" {
+  description = "Base name for the Key Vault (random suffix will be appended)"
+  type        = string
+  default     = "kv-webapp-demo"
+}
+
+# SQL Database Additional Variables
+variable "sql_sku" {
+  description = "SQL Database SKU"
+  type        = string
+  default     = "Basic"
+}
+
+# Application Gateway Additional Variables
+variable "app_gateway_sku_name" {
+  description = "Application Gateway SKU name"
+  type        = string
+  default     = "Standard_v2"
+}
+
+variable "app_gateway_sku_tier" {
+  description = "Application Gateway SKU tier"
+  type        = string
+  default     = "Standard_v2"
+}
+
+variable "app_gateway_capacity" {
+  description = "Application Gateway capacity"
+  type        = number
+  default     = 2
+}
+
+# Virtual Network Variables
+variable "vnet_name" {
+  description = "Name of the Virtual Network"
+  type        = string
+  default     = "vnet-webapp-demo"
+}
+
+variable "vnet_address_space" {
+  description = "Address space for the Virtual Network"
+  type        = list(string)
+  default     = ["10.0.0.0/16"]
+}
+
+variable "environment" {
+  description = "The environment name (dev, staging, prod)"
+  type        = string
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be one of: dev, staging, prod."
+  }
+}
+
+variable "environment_tags" {
+  description = "Environment-specific tags"
+  type        = map(string)
+  default     = {}
 }

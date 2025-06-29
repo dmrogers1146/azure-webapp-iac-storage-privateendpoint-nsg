@@ -67,7 +67,7 @@ The infrastructure implements a **segregated network architecture** with enhance
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/dmrogers1146/azure-webapp-iac-storage-privateendpoint-nsg.git
    cd azure-webapp-iac-storage-privateendpoint-nsg
    ```
 
@@ -140,49 +140,30 @@ The repository includes a comprehensive GitHub Actions workflow (`.github/workfl
 
 #### 1. Create GitHub Environment
 ```bash
-gh api --method PUT -H "Accept: application/vnd.github+json" \
-  repos/YOUR_ORG/YOUR_REPO/environments/dev
+# Your repository: https://github.com/dmrogers1146/azure-webapp-iac-storage-privateendpoint-nsg
+# Go to Settings > Environments > New environment
+# Name: dev
 ```
 
-#### 2. Create Service Principal
+#### 2. Create Service Principal (✅ COMPLETED)
 ```bash
-# Get subscription ID
-SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-
-# Create service principal
-SP_OUTPUT=$(az ad sp create-for-rbac --name "terraform-sp" \
-  --role "Contributor" \
-  --scopes "/subscriptions/$SUBSCRIPTION_ID")
-
-# Extract values
-CLIENT_ID=$(echo $SP_OUTPUT | jq -r .appId)
-TENANT_ID=$(echo $SP_OUTPUT | jq -r .tenant)
-
-# Grant User Access Administrator role (needed for role assignments)
-az role assignment create \
-  --assignee $CLIENT_ID \
-  --role "User Access Administrator" \
-  --scope "/subscriptions/$SUBSCRIPTION_ID"
+# ✅ Already created with these details:
+# CLIENT_ID: 38e257dc-b252-4671-9547-f33b7841f713
+# TENANT_ID: d357bf17-bbfe-45ca-861e-23fdfc24136a
+# SUBSCRIPTION_ID: 34c068fd-ceb1-4bb7-96c6-00360b36cbcb
 ```
 
-#### 3. Configure Federated Credentials
+#### 3. Configure Federated Credentials (✅ COMPLETED)
 ```bash
-az ad app federated-credential create \
-  --id $CLIENT_ID \
-  --parameters '{
-    "name": "github-federated",
-    "issuer": "https://token.actions.githubusercontent.com",
-    "subject": "repo:YOUR_ORG/YOUR_REPO:environment:dev",
-    "audiences": ["api://AzureADTokenExchange"]
-  }'
+# ✅ Already configured for OIDC authentication
+# Subject: repo:dmrogers1146/azure-webapp-iac-storage-privateendpoint-nsg:environment:dev
 ```
 
 #### 4. Set GitHub Secrets
-```bash
-gh secret set AZURE_CLIENT_ID --body "$CLIENT_ID" --env dev
-gh secret set AZURE_TENANT_ID --body "$TENANT_ID" --env dev  
-gh secret set AZURE_SUBSCRIPTION_ID --body "$SUBSCRIPTION_ID" --env dev
-```
+Add these secrets to your GitHub environment 'dev':
+- AZURE_CLIENT_ID: 38e257dc-b252-4671-9547-f33b7841f713
+- AZURE_TENANT_ID: d357bf17-bbfe-45ca-861e-23fdfc24136a  
+- AZURE_SUBSCRIPTION_ID: 34c068fd-ceb1-4bb7-96c6-00360b36cbcb
 
 ### Branch Protection Rules
 

@@ -1,0 +1,191 @@
+name: 'Terraform Infrastructure Deployment'
+
+on:
+  push:
+    branches:
+      - main        # Production deployments
+      - develop     # Development deployments
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+      - '.github/workflows/terraform.yml'
+  
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - prod
+
+env:
+  TF_VERSION: '1.6.0'
+
+permissions:
+  id-token: write   # Required for OIDC authentication
+  contents: read    # Required for checking out code
+  pull-requests: write  # Required for commenting on PRs
+
+jobs:
+  determine-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      workspace: ${{ steps.env.outputs.workspace }}
+      should_deploy: ${{ steps.env.outputs.should_deploy }}
+    steps:
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "workspace=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "workspace=prod" >> $GITHUB_OUTPUT
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "workspace=dev" >> $GITHUB_OUTPUT
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "workspace=dev" >> $GITHUB_OUTPUT
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  terraform-plan:
+    needs: determine-environment
+    runs-on: ubuntu-latest
+    environment: ${{ needs.determine-environment.outputs.environment }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars[format('AZURE_SUBSCRIPTION_ID_{0}', needs.determine-environment.outputs.environment)] }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform init
+          terraform workspace select ${{ needs.determine-environment.outputs.workspace }} || terraform workspace new ${{ needs.determine-environment.outputs.workspace }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -var-file="environments/${{ needs.determine-environment.outputs.environment }}.tfvars" \
+            -out=tfplan-${{ needs.determine-environment.outputs.environment }} \
+            -no-color
+        continue-on-error: true
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `### Terraform Plan for ${{ needs.determine-environment.outputs.environment }} 🌍
+            
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`terraform
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+            
+            </details>
+            
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ needs.determine-environment.outputs.environment }}
+          path: tfplan-${{ needs.determine-environment.outputs.environment }}
+          retention-days: 5
+
+  terraform-apply:
+    needs: [determine-environment, terraform-plan]
+    if: needs.determine-environment.outputs.should_deploy == 'true' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ needs.determine-environment.outputs.environment }}
+      url: ${{ steps.deploy.outputs.webapp_url }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars[format('AZURE_SUBSCRIPTION_ID_{0}', needs.determine-environment.outputs.environment)] }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ needs.determine-environment.outputs.environment }}
+
+      - name: Terraform Init
+        run: |
+          terraform init
+          terraform workspace select ${{ needs.determine-environment.outputs.workspace }}
+
+      - name: Terraform Apply
+        id: deploy
+        run: |
+          terraform apply -auto-approve tfplan-${{ needs.determine-environment.outputs.environment }}
+          
+          # Capture outputs
+          echo "webapp_url=$(terraform output -raw app_service_url)" >> $GITHUB_OUTPUT
+          echo "resource_group=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+
+      - name: Post-deployment validation
+        run: |
+          # Add any post-deployment validation here
+          echo "Deployment completed for ${{ needs.determine-environment.outputs.environment }}"
+          echo "Web App URL: ${{ steps.deploy.outputs.webapp_url }}"
+          echo "Resource Group: ${{ steps.deploy.outputs.resource_group }}"
