@@ -1,55 +1,66 @@
-name: 'Test Terraform Pipeline'
+name: '🧪 Pipeline Test - OIDC Authentication'
 
 on:
   push:
     branches:
-      - main
-      - develop
-      - 'feature/Staging-pipeline'  # Temporary for testing
-    paths:
-      - '**.tf'
-      - '**.tfvars'
-      - '.github/workflows/**'
+      - develop  # Test on develop branch only
   
   workflow_dispatch:
+    inputs:
+      test_message:
+        description: 'Test message to display'
+        required: false
+        default: 'Testing pipeline functionality'
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  test-authentication:
+  test-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Azure Login Test
+      - name: 🔐 Test Azure OIDC Authentication
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: a8912e4d-93c4-4867-ab0d-1095943662fd  # Dev subscription for testing
+          subscription-id: a8912e4d-93c4-4867-ab0d-1095943662fd  # Dev subscription
 
-      - name: Test Azure Connection
+      - name: ☁️ Verify Azure Connection
         run: |
-          echo "Testing Azure connection..."
-          az account show
-          echo "✅ Azure OIDC authentication successful!"
+          echo "🧪 Testing Azure CLI connection..."
+          az account show --output table
+          echo ""
+          echo "✅ Successfully authenticated to Azure!"
+          echo "📋 Current subscription: $(az account show --query name -o tsv)"
 
-      - name: Setup Terraform
+      - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.6.0'
 
-      - name: Terraform Version
-        run: terraform version
-
-      - name: Test Complete
+      - name: 📝 Test Terraform Setup
         run: |
-          echo "🎉 Pipeline test successful!"
-          echo "✅ GitHub secrets configured correctly"
-          echo "✅ Azure OIDC authentication working"  
-          echo "✅ Terraform setup working"
+          echo "🧪 Testing Terraform installation..."
+          terraform version
           echo ""
-          echo "Your deployment pipeline is ready for full configuration!"
+          echo "✅ Terraform setup successful!"
+
+      - name: 🎯 Pipeline Test Summary
+        run: |
+          echo "🎉 PIPELINE TEST RESULTS:"
+          echo "========================"
+          echo "✅ GitHub Secrets: Working"
+          echo "✅ Azure OIDC Auth: Working"
+          echo "✅ Azure CLI: Working"
+          echo "✅ Terraform: Working"
+          echo ""
+          echo "🚀 Your deployment pipeline is ready!"
+          echo ""
+          if [ "${{ github.event.inputs.test_message }}" != "" ]; then
+            echo "📝 Test Message: ${{ github.event.inputs.test_message }}"
+          fi
