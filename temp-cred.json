@@ -1,0 +1,7 @@
+{
+  "name": "develop-branch",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:dmrogers1146/azure-webapp-iac-storage-privateendpoint-nsg:ref:refs/heads/develop",
+  "description": "GitHub Actions - Develop Branch",
+  "audiences": ["api://AzureADTokenExchange"]
+}
