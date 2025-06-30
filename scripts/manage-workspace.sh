@@ -33,63 +33,63 @@ esac
 WORKSPACE=$ENVIRONMENT
 VAR_FILE="environments/${ENVIRONMENT}.tfvars"
 
-echo "🚀 Managing Terraform workspace: $WORKSPACE"
-echo "📁 Using variable file: $VAR_FILE"
+echo "Managing Terraform workspace: $WORKSPACE"
+echo "Using variable file: $VAR_FILE"
 
 # Check if variable file exists
 if [ ! -f "$VAR_FILE" ]; then
-    echo "❌ Error: Variable file $VAR_FILE not found"
+    echo "Error: Variable file $VAR_FILE not found"
     exit 1
 fi
 
 case $ACTION in
     init)
-        echo "🔧 Initializing Terraform..."
+        echo "Initializing Terraform..."
         terraform init
         
-        echo "🏗️  Creating/selecting workspace: $WORKSPACE"
+        echo "Creating/selecting workspace: $WORKSPACE"
         terraform workspace select $WORKSPACE 2>/dev/null || terraform workspace new $WORKSPACE
         
-        echo "✅ Workspace $WORKSPACE is ready"
+        echo "Workspace $WORKSPACE is ready"
         ;;
         
     plan)
-        echo "📋 Planning changes for $ENVIRONMENT environment..."
+        echo "Planning changes for $ENVIRONMENT environment..."
         terraform workspace select $WORKSPACE
         terraform plan -var-file="$VAR_FILE" -out="tfplan-$ENVIRONMENT"
         ;;
         
     apply)
-        echo "🚀 Applying changes for $ENVIRONMENT environment..."
+        echo "Applying changes for $ENVIRONMENT environment..."
         terraform workspace select $WORKSPACE
         
         if [ -f "tfplan-$ENVIRONMENT" ]; then
             echo "📦 Using existing plan file: tfplan-$ENVIRONMENT"
             terraform apply "tfplan-$ENVIRONMENT"
         else
-            echo "⚠️  No plan file found, running plan and apply..."
+            echo "No plan file found, running plan and apply..."
             terraform apply -var-file="$VAR_FILE"
         fi
         ;;
         
     destroy)
         echo "💥 Destroying resources for $ENVIRONMENT environment..."
-        echo "⚠️  This will destroy all resources in the $ENVIRONMENT environment!"
+        echo "WARNING: This will destroy all resources in the $ENVIRONMENT environment!"
         read -p "Are you sure? Type 'yes' to continue: " confirm
         
         if [ "$confirm" = "yes" ]; then
             terraform workspace select $WORKSPACE
             terraform destroy -var-file="$VAR_FILE"
         else
-            echo "❌ Destroy cancelled"
+            echo "Destroy cancelled"
             exit 1
         fi
         ;;
         
     *)
-        echo "❌ Error: Action must be one of: init, plan, apply, destroy"
+        echo "Error: Action must be one of: init, plan, apply, destroy"
         exit 1
         ;;
 esac
 
-echo "✅ Action '$ACTION' completed for environment '$ENVIRONMENT'"
+echo "Action '$ACTION' completed for environment '$ENVIRONMENT'"

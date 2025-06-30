@@ -1,13 +1,6 @@
-# GitHub Copilot Prompt:
-# I'm creating an Azure App Service infrastructure using Terraform.
-# Please generate Terraform code that:
-#
-# 1. Provisions an App Service with a System Assigned Managed Identity
-#    - Use azurerm_app_service and azurerm_app_service_plan
-#    - Assign the managed identity automatically
-#
-# 2. Creates an Azure Key Vault
-#    - Restrict access using Key Vault Access Policies
+# Azure Key Vault Configuration
+# This module creates an Azure Key Vault with appropriate access policies
+# for secure storage and retrieval of secrets, keys, and certificates
 #    - Allow the App Service's Managed Identity to read secrets
 #    - Store a secret like `sql-connection-string`
 #

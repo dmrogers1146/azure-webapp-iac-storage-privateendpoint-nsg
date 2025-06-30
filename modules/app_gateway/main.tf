@@ -40,12 +40,29 @@ resource "azurerm_application_gateway" "app_gateway" {
   }
 
   backend_http_settings {
-    name                  = var.http_setting_name
-    cookie_based_affinity = "Disabled"
-    path                  = "/"
-    port                  = 80
-    protocol              = "Http"
-    request_timeout       = 60
+    name                           = var.http_setting_name
+    cookie_based_affinity          = "Disabled"
+    path                           = "/"
+    port                           = 443
+    protocol                       = "Https"
+    request_timeout                = 60
+    pick_host_name_from_backend_address = true
+    probe_name                     = "appGatewayProbe"
+  }
+
+  probe {
+    name                                      = "appGatewayProbe"
+    protocol                                  = "Https"
+    path                                      = "/"
+    host                                      = var.backend_fqdns[0]
+    interval                                  = 30
+    timeout                                   = 30
+    unhealthy_threshold                       = 3
+    pick_host_name_from_backend_http_settings = false
+    
+    match {
+      status_code = ["200-399"]
+    }
   }
 
   http_listener {

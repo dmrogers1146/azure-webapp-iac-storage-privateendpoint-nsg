@@ -2,7 +2,7 @@
 
 This repository contains a complete Infrastructure as Code (IaC) solution for deploying a secure, scalable web application infrastructure on Azure using Terraform.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The infrastructure implements a **segregated network architecture** with enhanced security through private endpoints and network security groups:
 
@@ -33,7 +33,7 @@ The infrastructure implements a **segregated network architecture** with enhance
 - **NSG Rules**: Network Security Groups control traffic flow
 - **Service Endpoints**: Optimized access to Azure services
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 ├── .github/
@@ -54,7 +54,7 @@ The infrastructure implements a **segregated network architecture** with enhance
 └── README.md                      # This file
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -91,7 +91,7 @@ The infrastructure implements a **segregated network architecture** with enhance
    terraform apply
    ```
 
-## 🔧 Terraform Configuration
+## Terraform Configuration
 
 ### Backend Configuration
 The infrastructure uses **local state** for development. For production, configure remote state storage:
@@ -145,17 +145,17 @@ The repository includes a comprehensive GitHub Actions workflow (`.github/workfl
 # Name: dev
 ```
 
-#### 2. Create Service Principal (✅ COMPLETED)
+#### 2. Create Service Principal (COMPLETED)
 ```bash
-# ✅ Already created with these details:
+# Already created with these details:
 # CLIENT_ID: 38e257dc-b252-4671-9547-f33b7841f713
 # TENANT_ID: d357bf17-bbfe-45ca-861e-23fdfc24136a
 # SUBSCRIPTION_ID: 34c068fd-ceb1-4bb7-96c6-00360b36cbcb
 ```
 
-#### 3. Configure Federated Credentials (✅ COMPLETED)
+#### 3. Configure Federated Credentials (COMPLETED)
 ```bash
-# ✅ Already configured for OIDC authentication
+# Already configured for OIDC authentication
 # Subject: repo:dmrogers1146/azure-webapp-iac-storage-privateendpoint-nsg:environment:dev
 ```
 
@@ -218,7 +218,7 @@ terraform force-unlock LOCK_ID
 terraform import azurerm_resource_group.main /subscriptions/SUB_ID/resourceGroups/RG_NAME
 ```
 
-## 📊 Outputs
+## Outputs
 
 After successful deployment, access your resources:
 
@@ -227,7 +227,7 @@ After successful deployment, access your resources:
 - **Resource Group Name**: Container for all resources
 - **Key Vault Name**: For accessing stored secrets
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -247,7 +247,7 @@ az sql server show --name myapp-dev-sql --resource-group myapp-dev-rg
 az webapp log download --name myapp-dev-web --resource-group myapp-dev-rg
 ```
 
-## 📝 Demo Checklist
+## Demo Checklist
 
 For the 10-15 minute walkthrough:
 

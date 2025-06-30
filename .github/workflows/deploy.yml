@@ -125,7 +125,7 @@ jobs:
 
     - name: Validate Infrastructure
       run: |
-        echo "🔍 Validating deployed resources..."
+        echo "Validating deployed resources..."
         
         # Get resource group from terraform outputs (you may need to adjust this)
         RG_NAME="${{ needs.terraform-apply.outputs.resource_group_name || 'myapp-dev-rg' }}"
@@ -146,4 +146,4 @@ jobs:
         echo "Checking Application Gateway..."
         az network application-gateway list --resource-group $RG_NAME --query "[].name" -o tsv
         
-        echo "✅ Infrastructure validation completed successfully!"
+        echo "Infrastructure validation completed successfully!"

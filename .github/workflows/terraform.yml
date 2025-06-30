@@ -113,7 +113,7 @@ jobs:
             const output = `### Terraform Plan for ${{ needs.determine-environment.outputs.environment }} 🌍
             
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Validation `${{ steps.validate.outcome }}`
             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
             
             <details><summary>Show Plan</summary>

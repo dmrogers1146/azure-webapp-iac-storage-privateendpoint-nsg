@@ -1,6 +1,6 @@
 # Deployment Pipeline Setup Status
 
-## ✅ Completed Tasks
+## Completed Tasks
 
 ### Environment Configuration
 - **Dev Environment**: Configured with subscription `a8912e4d-93c4-4867-ab0d-1095943662fd`
@@ -16,19 +16,19 @@
 - **Workspace Manager**: PowerShell script ready for local development
 - **Environment Files**: Properly configured for both environments
 
-## ✅ Recently Completed
+## Recently Completed
 
 ### Azure Service Principal Setup
-- **Service Principal Created**: ✅ Azure OIDC service principal configured
-- **Federated Credentials**: ✅ GitHub Actions authentication configured
-- **Multi-subscription Access**: ✅ Permissions granted to both dev and prod subscriptions
+- **Service Principal Created**: Azure OIDC service principal configured
+- **Federated Credentials**: GitHub Actions authentication configured
+- **Multi-subscription Access**: Permissions granted to both dev and prod subscriptions
 
 ### GitHub Repository Configuration
-- **GitHub Secrets**: ✅ AZURE_CLIENT_ID and AZURE_TENANT_ID configured via GitHub CLI
-- **GitHub Variables**: ✅ Subscription IDs for dev and prod environments configured
-- **Authentication**: ✅ OIDC authentication ready for GitHub Actions
+- **GitHub Secrets**: AZURE_CLIENT_ID and AZURE_TENANT_ID configured via GitHub CLI
+- **GitHub Variables**: Subscription IDs for dev and prod environments configured
+- **Authentication**: OIDC authentication ready for GitHub Actions
 
-## 🚀 Ready for Testing!
+## Ready for Testing!
 Add these secrets to your GitHub repository:
 - `AZURE_CLIENT_ID`: From the service principal creation output
 - `AZURE_TENANT_ID`: Your Azure AD tenant ID
@@ -50,24 +50,24 @@ Add these variables to your GitHub repository:
 - **Environment Approvals**: Configure GitHub environment protection
 - **Monitoring**: Set up Azure Monitor alerts for resources
 
-## 📋 Current File Structure
+## Current File Structure
 
 ```
 environments/
-├── dev.tfvars     ✅ Dev subscription configured
-└── prod.tfvars    ✅ Prod subscription configured
+├── dev.tfvars     Dev subscription configured
+└── prod.tfvars    Prod subscription configured
 
 .github/workflows/
-└── terraform.yml  ✅ Updated for dev/prod only
+└── terraform.yml  Updated for dev/prod only
 
 scripts/
-├── setup-azure-oidc.ps1      ✅ Azure OIDC setup script
-└── workspace-manager.ps1     ✅ Local workspace management
+├── setup-azure-oidc.ps1      Azure OIDC setup script
+└── workspace-manager.ps1     Local workspace management
 
-DEPLOYMENT_GUIDE.md            ✅ Complete documentation
+DEPLOYMENT_GUIDE.md            Complete documentation
 ```
 
-## 🎯 Ready for Deployment
+## Ready for Deployment
 
 Your Terraform deployment pipeline is now properly configured for:
 - **Two environments**: Development and Production
