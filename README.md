@@ -125,7 +125,7 @@ sql_admin_username     = "sqladmin"
 sql_admin_password     = "YourSecurePassword123!"
 ```
 
-## 🔄 CI/CD Pipeline
+## CI/CD Pipeline
 
 ### GitHub Actions Workflow
 
@@ -173,7 +173,7 @@ Configure branch protection for `main`:
 3. Require branches to be up to date
 4. Restrict pushes to main branch
 
-## 🔒 Security Best Practices
+## Security Best Practices
 
 ### Network Security
 - **Private Endpoints**: Database and storage are not internet-accessible
@@ -271,7 +271,7 @@ For the 10-15 minute walkthrough:
    - Show how to revert changes
    - Explain emergency procedures
 
-## 🤝 Contributing
+## Contributing
 
 1. Create feature branch from `develop`
 2. Make changes and test locally
@@ -279,7 +279,7 @@ For the 10-15 minute walkthrough:
 4. Ensure pipeline passes
 5. Merge after review
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [Terraform Azure Provider Documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 - [Azure Well-Architected Framework](https://docs.microsoft.com/en-us/azure/architecture/framework/)
