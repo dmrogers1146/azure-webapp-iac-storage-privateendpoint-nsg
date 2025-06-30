@@ -81,6 +81,9 @@ module "sql_database" {
   subnet_id           = module.networking.sql_private_endpoint_subnet_id
   enable_private_endpoint = true
 
+  # Backup and auditing configuration
+  storage_endpoint      = module.storage_account.primary_blob_endpoint
+
   tags = var.tags
 }
 

@@ -187,3 +187,125 @@ To add a new environment (e.g., staging):
 - Review and rotate service principal credentials
 - Update resource configurations as needed
 - Maintain environment parity where possible
+
+## Interview Demo - GitHub Branch Protection & Deployment Workflow
+
+### Phase 1: Create Feature Branch & Make Changes
+
+```powershell
+# 1. Create and switch to feature branch
+git checkout -b feature/demo-change
+
+# 2. Make a small infrastructure change (for demo)
+# Edit terraform.tfvars - change a tag or add a comment
+notepad terraform.tfvars
+
+# 3. Commit the change
+git add .
+git commit -m "Demo: Update infrastructure configuration"
+
+# 4. Push feature branch
+git push -u origin feature/demo-change
+```
+
+### Phase 2: Create Pull Request (GitHub Web UI)
+
+```bash
+# 5. Go to GitHub repository in browser
+# 6. Click "Compare & pull request" button
+# 7. Add title: "Demo: Infrastructure update"
+# 8. Add description of changes
+# 9. Click "Create pull request"
+```
+
+### Phase 3: Demonstrate Branch Protection
+
+```powershell
+# 10. Try to push directly to main (this should fail)
+git checkout main
+git merge feature/demo-change
+git push origin main
+# This will fail due to branch protection!
+```
+
+### Phase 4: Proper Workflow - Merge via PR
+
+```bash
+# 11. Go back to GitHub PR
+# 12. Review the changes
+# 13. Check that CI/CD pipeline runs
+# 14. Approve and merge the PR
+# 15. Delete the feature branch
+```
+
+### Phase 5: Monitor Deployment
+
+```powershell
+# 16. Switch back to main and pull changes
+git checkout main
+git pull origin main
+
+# 17. Check GitHub Actions for deployment status
+# Go to Actions tab in GitHub
+
+# 18. Monitor Azure resources
+az group list --query "[?contains(name, 'webapp-payg')].name" -o table
+
+# 19. Verify deployment outputs
+terraform output
+```
+
+### Phase 6: Validate Live Application
+
+```powershell
+# 20. Test the deployed application
+# Use the URLs from terraform output
+curl https://app-webapp-payg-demo.azurewebsites.net
+
+# 21. Check Application Gateway
+curl http://20.125.46.23
+```
+
+## Interview Talking Points
+
+1. **Branch Protection**: "Direct pushes to main are blocked, enforcing code review"
+2. **CI/CD Pipeline**: "Every PR triggers automated testing and validation"
+3. **Infrastructure as Code**: "Terraform manages all Azure resources consistently"
+4. **Security**: "Service principals with minimal permissions, Key Vault for secrets"
+5. **Monitoring**: "Can track deployments through GitHub Actions and Azure portal"
+
+## Interview Questions You Can Answer
+
+- **"How do you ensure code quality?"** → Branch protection + PR reviews
+- **"How do you deploy to Azure?"** → GitHub Actions with Terraform
+- **"How do you handle secrets?"** → Azure Key Vault + GitHub secrets
+- **"How do you prevent direct production changes?"** → Branch protection rules
+- **"How do you rollback deployments?"** → Terraform state management + git revert
+
+## Complete Destroy/Rebuild Test Commands
+
+### Destroy Current Infrastructure
+
+```powershell
+# Check current state
+terraform output
+
+# Destroy all resources
+terraform destroy -auto-approve
+
+# Verify destruction
+az group list --query "[?contains(name, 'webapp-payg')].name" -o table
+```
+
+### Rebuild Infrastructure
+
+```powershell
+# Rebuild from scratch
+terraform apply -auto-approve
+
+# Verify outputs
+terraform output
+
+# Test application
+curl $(terraform output -raw app_service_url)
+```

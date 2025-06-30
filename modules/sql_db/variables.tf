@@ -45,3 +45,10 @@ variable "enable_private_endpoint" {
   type        = bool
   default     = true
 }
+
+variable "storage_endpoint" {
+  description = "Storage endpoint for SQL auditing logs (enables monthly audit log retention)"
+  type        = string
+  default     = ""
+}
+

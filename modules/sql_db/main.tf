@@ -21,6 +21,26 @@ resource "azurerm_mssql_database" "sql_database" {
   tags = var.tags
 }
 
+# SQL Server auditing policy for compliance and backup audit logs
+resource "azurerm_mssql_server_extended_auditing_policy" "sql_server_auditing" {
+  count                      = var.storage_endpoint != "" ? 1 : 0
+  server_id                  = azurerm_mssql_server.sql_server.id
+  storage_endpoint           = var.storage_endpoint
+  retention_in_days          = 90  # 3 months retention for audit logs
+  log_monitoring_enabled     = true
+  storage_account_access_key_is_secondary = false
+}
+
+# SQL Database auditing policy with extended retention for monthly captures
+resource "azurerm_mssql_database_extended_auditing_policy" "sql_database_auditing" {
+  count                      = var.storage_endpoint != "" ? 1 : 0
+  database_id               = azurerm_mssql_database.sql_database.id
+  storage_endpoint          = var.storage_endpoint
+  retention_in_days         = 30  # Monthly retention for database audit logs
+  log_monitoring_enabled    = true
+  storage_account_access_key_is_secondary = false
+}
+
 resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
   name             = "AllowAzureServices"
   server_id        = azurerm_mssql_server.sql_server.id
